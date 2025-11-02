@@ -4,6 +4,10 @@ import { conectDB } from "./config/db";
 import routerSistema from "./router/RouterSistema";
 import routerUsuario from "./router/RouterUsuario";
 import routerCalendario from "./router/RouterCalendario";
+import routerAusencia from "./router/RouterAusencia"
+
+import cors from "cors"
+import { corsConfig } from "./config/cors";
 
 //. Variables de entorno
 dotenv.config()
@@ -15,9 +19,13 @@ const app = express();
 //. ->  Habilitar lectura de json
 app.use(express.json())
 
+//. CORS
+app.use(cors(corsConfig))
+
 
 app.use("/api/sistemas", routerSistema)
 app.use("/api/usuarios", routerUsuario)
 app.use("/api/calendario", routerCalendario)
+app.use("/api/ausencia", routerAusencia)
 
 export default app
