@@ -51,6 +51,7 @@ export class ControllerAusencia {
             if ( !usuario ) {
                 return res.status(404).json({ message: 'Usuario no encontrado'});
             }
+            console.log(`inicio: ${fechaInicio} fin ${fechaFin}`)
             const ausencia = new Ausencia({
                 idUsuario:userId,
                 motivo,
