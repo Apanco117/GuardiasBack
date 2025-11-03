@@ -10,7 +10,7 @@ type UsuarioConJusticia = UsuarioType & {
     ultimaGuardiaParaSort: Date | null;
 }
 
-
+const diasSemana = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
 export const algoritmoGenerarMes = async (
   mes: number,
   anio: number,
@@ -45,13 +45,16 @@ export const algoritmoGenerarMes = async (
             (a.ultimaGuardiaParaSort?.getTime() || 0) - (b.ultimaGuardiaParaSort?.getTime() || 0);
 
     //console.log(usuariosConJusticia)
+    console.log(`--- Iniciando Generación de Mes: ${mes}/${anio} (Días: ${diasDelMes}) ---`);
 
     //. Iterar cada dia del mes
     for (let dia = 1; dia <= diasDelMes; dia++) {
         const fechaActual = new Date(Date.UTC(anio, mes - 1, dia));
         const diaDeLaSemana = fechaActual.getUTCDay();
-        
-        if (diaDeLaSemana === 0 || diaDeLaSemana === 1) { // Omitir sabados y domingos
+
+        console.log(`Día ${dia} (${diasSemana[diaDeLaSemana]}) - ${diaDeLaSemana} - Valor UTC: ${diaDeLaSemana}`);
+
+        if (diaDeLaSemana === 0 || diaDeLaSemana === 6) { // Omitir sabados y domingos
             continue; 
         }
         // Obtener usuarios que no esten ausentes
@@ -71,23 +74,24 @@ export const algoritmoGenerarMes = async (
         principales.sort(sortFn);
         apoyos.sort(sortFn);
 
-        console.log(`Analizando el dia ${dia}`)
-
         // Entontrar pareja de guardias
         let parEncontrado = false;
         for (const principal of principales) {
             const idUltimoCompañero = await GetUltimoCompañero(principal._id, fechaActual); // Pendiente de revisar
             const apoyosValidos = apoyos.filter((apoyo) => !CheckConflictoSistema(principal, apoyo)); // Obtener apoyos disponibles ( diferente sistema )
 
-            if (apoyosValidos.length === 0) continue;
+            if (apoyosValidos.length === 0) {
+                console.log(`     -> ¡CONFLICTO DE SISTEMA! No hay apoyos válidos para ${principal.nombre}. Probando siguiente principal...`);
+                continue
+            };
 
             let apoyoElegido: UsuarioConJusticia;
             const mejorApoyo = apoyosValidos[0];
             const segundoMejorApoyo = apoyosValidos[1];
 
-            //console.log(`G. primaria ${principal.nombre}`)
-            //console.log(`G. secundaria primer opcion ${mejorApoyo.nombre}`)
-            //console.log(`G. secundaria segunda opcion ${segundoMejorApoyo.nombre}`)
+            console.log(`G. primaria ${principal.nombre}`)
+            console.log(`G. secundaria primer opcion ${mejorApoyo.nombre}`)
+            console.log(`G. secundaria segunda opcion ${segundoMejorApoyo.nombre}`)
 
             if (
                 idUltimoCompañero && // Existe ultimo compañero
@@ -107,6 +111,7 @@ export const algoritmoGenerarMes = async (
             });
 
             await nuevaGuardia.save();
+            console.log(nuevaGuardia)
             calendarioGenerado.push(nuevaGuardia);
             
             // Actualizar usuarios en memoria para dias siguientes
@@ -123,6 +128,7 @@ export const algoritmoGenerarMes = async (
         }
 
         if (!parEncontrado) {
+            console.log(`     -> ¡FALLO DE ASIGNACIÓN! No se pudo encontrar pareja para el Día ${dia}.`); // Log fina
             diasSinAsignar.push(dia);
         }
 

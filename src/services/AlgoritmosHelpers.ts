@@ -9,9 +9,9 @@ export const checkFechaEnRango = (check: Date, inicio: Date, fin: Date): boolean
     const fInicio = new Date(inicio);
     const fFin = new Date(fin);
     
-    f.setHours(0, 0, 0, 0);
-    fInicio.setHours(0, 0, 0, 0);
-    fFin.setHours(0, 0, 0, 0);
+    f.setUTCHours(0, 0, 0, 0);
+    fInicio.setUTCHours(0, 0, 0, 0);
+    fFin.setUTCHours(0, 0, 0, 0);
     
     return f.getTime() >= fInicio.getTime() && f.getTime() <= fFin.getTime();
 };

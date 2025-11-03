@@ -96,9 +96,9 @@ export class ControllerCalendario {
                 });
             }
 
-            // 3. Calcular rango de fechas para la consulta
-            const fechaInicioMes = new Date(anioNum, mesNum - 1, 1);
-            const fechaFinMes = new Date(anioNum, mesNum, 0); // Día 0 del sig. mes = último día del mes actual
+            
+            const fechaInicioMes = new Date(Date.UTC(anioNum, mesNum - 1, 1)); 
+            const fechaFinMes = new Date(Date.UTC(anioNum, mesNum, 1));
 
             // 4. La consulta con POBLACIÓN (populate)
             const calendario = await CalendarioGuardia.find({
