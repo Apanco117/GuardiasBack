@@ -76,6 +76,10 @@ export const algoritmoGenerarHomeOffice = async (
             console.log(` -> FIN DE SEMANA (HO). Saltando...`);
             continue; 
         }
+        
+        if (diaDeLaSemana === 1) { 
+            asignadosEstaSemana.clear(); // Limpiar conteo semanal
+        }
 
         // Saltar dias festivos
         const esFestivo = diasFestivosDelMes.some(
@@ -86,9 +90,6 @@ export const algoritmoGenerarHomeOffice = async (
             continue;
         }
 
-        if (diaDeLaSemana === 1) { 
-            asignadosEstaSemana.clear(); // Limpiar conteo semanal
-        }
 
         const cupoDiario = Math.ceil((usuarios.length * DIAS_HO_POR_SEMANA) / 5);
 
