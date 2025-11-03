@@ -46,15 +46,15 @@ export const algoritmoGenerarMes = async (
     const sortFn = (a: UsuarioConJusticia, b: UsuarioConJusticia) =>
             (a.ultimaGuardiaParaSort?.getTime() || 0) - (b.ultimaGuardiaParaSort?.getTime() || 0);
 
-    //console.log(usuariosConJusticia)
-    console.log(`--- Iniciando Generación de Mes: ${mes}/${anio} (Días: ${diasDelMes}) ---`);
+    
+    //console.log(`--- Iniciando Generación de Mes: ${mes}/${anio} (Días: ${diasDelMes}) ---`);
 
     //. Iterar cada dia del mes
     for (let dia = 1; dia <= diasDelMes; dia++) {
         const fechaActual = new Date(Date.UTC(anio, mes - 1, dia));
         const diaDeLaSemana = fechaActual.getUTCDay();
 
-        console.log(`Día ${dia} (${diasSemana[diaDeLaSemana]}) - ${diaDeLaSemana} - Valor UTC: ${diaDeLaSemana}`);
+        //console.log(`Día ${dia} (${diasSemana[diaDeLaSemana]}) - ${diaDeLaSemana} - Valor UTC: ${diaDeLaSemana}`);
 
         if (diaDeLaSemana === 0 || diaDeLaSemana === 6) { // Omitir sabados y domingos
             continue; 
@@ -63,7 +63,7 @@ export const algoritmoGenerarMes = async (
             (festivo) => festivo.fecha.getTime() === fechaActual.getTime()
         );
         if (esFestivo) {
-            console.log(`Día ${dia} (Día Festivo) -> Saltando...`);
+            //console.log(`Día ${dia} (Día Festivo) -> Saltando...`);
             continue;
         }
 
@@ -101,9 +101,9 @@ export const algoritmoGenerarMes = async (
             const mejorApoyo = apoyosValidos[0];
             const segundoMejorApoyo = apoyosValidos[1];
 
-            console.log(`G. primaria ${principal.nombre}`)
-            console.log(`G. secundaria primer opcion ${mejorApoyo.nombre}`)
-            console.log(`G. secundaria segunda opcion ${segundoMejorApoyo.nombre}`)
+            //console.log(`G. primaria ${principal.nombre}`)
+            //console.log(`G. secundaria primer opcion ${mejorApoyo.nombre}`)
+            //console.log(`G. secundaria segunda opcion ${segundoMejorApoyo.nombre}`)
 
             if (
                 idUltimoCompañero && // Existe ultimo compañero
@@ -123,7 +123,7 @@ export const algoritmoGenerarMes = async (
             });
 
             await nuevaGuardia.save();
-            console.log(nuevaGuardia)
+            //console.log(nuevaGuardia)
             calendarioGenerado.push(nuevaGuardia);
             
             // Actualizar usuarios en memoria para dias siguientes

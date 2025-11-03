@@ -52,5 +52,11 @@ router.patch("/sistema/:id",
     handleInputErrors,
     ControllerUsuario.updateSistema
 )
+router.get("/desactivar/:id",
+    param('id').isMongoId().withMessage('El ID del usuario no es un MongoID válido.'),
+    body("activo").notEmpty().withMessage("El estado activo es obligatorio").isBoolean().withMessage("El estado activo debe ser un valor booleano"),
+    handleInputErrors,
+    ControllerUsuario.desactivarUsuarioGuardia
+)
 
 export default router

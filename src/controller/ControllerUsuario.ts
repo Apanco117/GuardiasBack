@@ -207,5 +207,28 @@ export class ControllerUsuario {
             });
         }
     }
+    static desactivarUsuarioGuardia = async ( req: Request, res: Response ) => {
+        try{
+            const { id } = req.params;
+            const { activo } = req.body;
+            const usuario = await Usuario.findById(id);
+            if (!usuario){
+                return res.status(404).json({ message: 'Usuario no encontrado'});
+            }
 
-}
+            const usuarioActivo = activo === "true" ? true : false;
+
+            usuario.activo = usuarioActivo;
+            await usuario.save();
+            res.status(200).json({
+                message: "Se actulizo el estado del usuario correctamente"
+            })
+        } catch(error){
+            res.status(500).json({
+                ok: false,
+                message: 'Error interno del servidor. Por favor, contacte al administrador.',
+                error: error instanceof Error ? error.message : 'Error desconocido' // Opcional: proveer más detalles en desarrollo
+            });
+        } 
+    }
+} 

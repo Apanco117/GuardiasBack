@@ -47,17 +47,6 @@ export class ControllerCalendario {
             if (usuariosActivos.length < 2) {
                 return res.status(409).json({ message: 'No hay suficientes usuarios activos para generar guardias.' });
             }
-
-            const usuariosParaHO = usuariosActivos.filter(u => u.tieneHomeOffice);
-            // await algoritmoGenerarHomeOffice(
-            //     mes,
-            //     anio,
-            //     usuariosParaHO,
-            //     ausenciasDelMes
-            // );
-
-           
-
             
             const { calendarioGenerado, diasSinAsignar } = await algoritmoGenerarMes(
                 mes,
@@ -65,6 +54,15 @@ export class ControllerCalendario {
                 usuariosActivos,
                 ausenciasDelMes,
                 diasFestivosDelMes
+            );
+
+            await algoritmoGenerarHomeOffice(
+                mes,
+                anio,
+                usuariosActivos,
+                ausenciasDelMes,
+                diasFestivosDelMes,
+                calendarioGenerado  
             );
 
             // 5. Responder
@@ -87,11 +85,9 @@ export class ControllerCalendario {
 
     static getCalendarioMesGuardia = async (req: Request, res: Response) => {
         try {
-            // 1. Obtenemos mes y año de los query params (ej. /api/calendario?mes=11&anio=2025)
             const { mes, anio } = req.query;
             console.log(`${mes} / ${anio}`)
 
-            // 2. Validación de Entrada
             const mesNum = parseInt(mes as string);
             const anioNum = parseInt(anio as string);
 
@@ -104,26 +100,25 @@ export class ControllerCalendario {
             
             const fechaInicioMes = new Date(Date.UTC(anioNum, mesNum - 1, 1)); 
             const fechaFinMes = new Date(Date.UTC(anioNum, mesNum, 1));
-
-            // 4. La consulta con POBLACIÓN (populate)
+            
             const calendario = await CalendarioGuardia.find({
                 fecha: {
                 $gte: fechaInicioMes,
                 $lte: fechaFinMes,
                 },
             })
-            .sort({ fecha: 1 }) // Ordena los días ascendentemente (del 1 al 30/31)
+            .sort({ fecha: 1 }) 
             .populate({
-                path: 'idUsuarioPrincipal', // Pobla este campo
-                select: 'nombre email categoria idSistema', // Trae solo estos campos del usuario
+                path: 'idUsuarioPrincipal', 
+                select: 'nombre email categoria idSistema', 
                 populate: {
-                path: 'idSistema', // ¡Población Anidada!
-                select: 'nombre',    // Trae solo el nombre del sistema
-                model: 'Sistema'     // (Opcional, pero buena práctica)
+                path: 'idSistema', 
+                select: 'nombre',    
+                model: 'Sistema'     
                 }
             })
             .populate({
-                path: 'idUsuarioApoyo', // Repetimos para el usuario de apoyo
+                path: 'idUsuarioApoyo', 
                 select: 'nombre email categoria idSistema',
                 populate: {
                 path: 'idSistema',
