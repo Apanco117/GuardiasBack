@@ -48,10 +48,10 @@ export const algoritmoGenerarMes = async (
 
     //. Iterar cada dia del mes
     for (let dia = 1; dia <= diasDelMes; dia++) {
-        const fechaActual = new Date(anio, mes - 1, dia);
-        const diaDeLaSemana = fechaActual.getDay(); // Obtener dia de la semana. ej 1 -> lunes
+        const fechaActual = new Date(Date.UTC(anio, mes - 1, dia));
+        const diaDeLaSemana = fechaActual.getUTCDay();
         
-        if (diaDeLaSemana === 0 || diaDeLaSemana === 6) { // Omitir sabados y domingos
+        if (diaDeLaSemana === 0 || diaDeLaSemana === 1) { // Omitir sabados y domingos
             continue; 
         }
         // Obtener usuarios que no esten ausentes

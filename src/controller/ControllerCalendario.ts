@@ -18,10 +18,10 @@ export class ControllerCalendario {
                 });
             }
 
-            // 2. Limpieza (Regeneración)
-            // Borramos el calendario existente para ese mes
-            const fechaInicioMes = new Date(anio, mes - 1, 1);
-            const fechaFinMes = new Date(anio, mes, 0); // El día 0 del siguiente mes es el último del actual
+            
+            const fechaInicioMes = new Date(Date.UTC(anio, mes - 1, 1));
+            
+            const fechaFinMes = new Date(Date.UTC(anio, mes, 0)); 
 
             await Promise.all([
                 CalendarioGuardia.deleteMany({ fecha: { $gte: fechaInicioMes, $lte: fechaFinMes } }),
