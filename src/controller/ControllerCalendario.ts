@@ -188,7 +188,6 @@ export class ControllerCalendario {
 
     static getAllMonths = async ( req : Request, res: Response ) => {
         try{
-            console.log("xd")
             const mesesGenerados = await CalendarioGuardia.aggregate([
                 {
                     // 2. Agrupamos todos los documentos por una ID compuesta
@@ -243,6 +242,9 @@ export class ControllerCalendario {
     static deleteMonth = async ( req : Request, res: Response ) => {
         try{
             const { mes, anio } = req.query;
+
+            console.log(`${mes}/${anio}`)
+
             const mesNum = parseInt(mes as string);
                 const anioNum = parseInt(anio as string);
 
@@ -251,13 +253,13 @@ export class ControllerCalendario {
                         message: 'Mes y año son requeridos como query parameters y deben ser válidos.',
                     });
                 }
+                
+                const fechaInicioMes = new Date(Date.UTC(anioNum, mesNum - 1, 1));
+                const fechaFinMes = new Date(Date.UTC(anioNum, mesNum, 0));
+                console.log(fechaInicioMes)
+                console.log(fechaFinMes)
 
-                // 3. Calcular el rango de fechas para la eliminación
-                const fechaInicioMes = new Date(anioNum, mesNum - 1, 1);
-                // Día 0 del siguiente mes = último día del mes actual
-                const fechaFinMes = new Date(anioNum, mesNum, 0); 
-
-                // 4. Crear el filtro de fecha
+                
                 const filtroFecha = {
                     fecha: {
                         $gte: fechaInicioMes,

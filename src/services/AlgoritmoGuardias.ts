@@ -18,8 +18,8 @@ export const algoritmoGenerarMes = async (
   ausenciasDelMes: AusenciaType[]
 ) => {
 
-    const diasDelMes = new Date(anio, mes, 0).getDate(); // Numero de dias que tiene el mes
-    const fechaInicioMes = new Date(anio, mes - 1, 1);
+    const diasDelMes = new Date(Date.UTC(anio, mes, 0)).getUTCDate();
+    const fechaInicioMes = new Date(Date.UTC(anio, mes - 1, 1));
     const calendarioGenerado: CalendarioGuardiaType[] = [];
     const diasSinAsignar = [];
 
