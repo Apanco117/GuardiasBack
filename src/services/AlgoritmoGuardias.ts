@@ -5,6 +5,7 @@ import Usuario, { UsuarioType } from '../models/Usuario'; // Importamos los Type
 import { AusenciaType } from '../models/Ausencia';
 import CalendarioHomeOffice from '../models/HomeOffice';
 import { CheckConflictoSistema, checkFechaEnRango, GetUltimoCompañero } from './AlgoritmosHelpers';
+import { DiaFestivoType } from '../models/DiasFestivos';
 
 type UsuarioConJusticia = UsuarioType & {
     ultimaGuardiaParaSort: Date | null;
@@ -15,7 +16,8 @@ export const algoritmoGenerarMes = async (
   mes: number,
   anio: number,
   usuariosActivos: UsuarioType[],
-  ausenciasDelMes: AusenciaType[]
+  ausenciasDelMes: AusenciaType[],
+  diasFestivosDelMes: DiaFestivoType[]
 ) => {
 
     const diasDelMes = new Date(Date.UTC(anio, mes, 0)).getUTCDate();
@@ -57,6 +59,16 @@ export const algoritmoGenerarMes = async (
         if (diaDeLaSemana === 0 || diaDeLaSemana === 6) { // Omitir sabados y domingos
             continue; 
         }
+        const esFestivo = diasFestivosDelMes.some(
+            (festivo) => festivo.fecha.getTime() === fechaActual.getTime()
+        );
+        if (esFestivo) {
+            console.log(`Día ${dia} (Día Festivo) -> Saltando...`);
+            continue;
+        }
+
+
+
         // Obtener usuarios que no esten ausentes
         const usuariosDisponibles = usuariosConJusticia.filter((u) => {
             return !ausenciasDelMes.some(

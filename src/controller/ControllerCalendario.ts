@@ -5,6 +5,7 @@ import Ausencia from "../models/Ausencia";
 import { algoritmoGenerarMes } from "../services/AlgoritmoGuardias";
 import CalendarioHomeOffice from "../models/HomeOffice";
 import { algoritmoGenerarHomeOffice } from "../services/AlgoritmoHomeOffice";
+import DiaFestivo from "../models/DiasFestivos";
 
 export class ControllerCalendario {
     static generarCalendarioMensual = async (req: Request, res: Response) => {
@@ -30,14 +31,17 @@ export class ControllerCalendario {
 
             // 3. Obtener Datos Maestros
             // Obtenemos todos los usuarios activos y todas las ausencias de ESE MES
-            const [usuariosActivos, ausenciasDelMes] = await Promise.all([
+           const [usuariosActivos, ausenciasDelMes, diasFestivosDelMes] = await Promise.all([ // <-- 2. Añadir aquí
                 Usuario.find({ activo: true }),
                 Ausencia.find({
-                $or: [
-                    { fechaInicio: { $lte: fechaFinMes, $gte: fechaInicioMes } },
-                    { fechaFin: { $lte: fechaFinMes, $gte: fechaInicioMes } },
-                ],
+                    $or: [
+                        { fechaInicio: { $lte: fechaFinMes, $gte: fechaInicioMes } },
+                        { fechaFin: { $lte: fechaFinMes, $gte: fechaInicioMes } },
+                    ],
                 }),
+                DiaFestivo.find({
+                    fecha: { $gte: fechaInicioMes, $lte: fechaFinMes }
+                })
             ]);
 
             if (usuariosActivos.length < 2) {
@@ -59,7 +63,8 @@ export class ControllerCalendario {
                 mes,
                 anio,
                 usuariosActivos,
-                ausenciasDelMes
+                ausenciasDelMes,
+                diasFestivosDelMes
             );
 
             // 5. Responder
