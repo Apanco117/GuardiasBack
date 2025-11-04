@@ -8,6 +8,28 @@ import { CalendarioGuardiaType } from '../models/CalendarioGuardia';
 
 const DIAS_HO_POR_SEMANA = 1;
 
+const logResumenSemanal = (
+    titulo: string,
+    asignadosMap: Map<string, number>,
+    usuariosElegibles: UsuarioConJusticiaHO[]
+) => {
+    const usuariosQueTuvieronHO = asignadosMap.size;
+    const usuariosQueDebianTener = usuariosElegibles.length;
+
+    console.log(`     -------------------------------------------------`);
+    console.log(`     ${titulo}`);
+    console.log(`     -> Asignados: ${usuariosQueTuvieronHO} de ${usuariosQueDebianTener}`);
+    
+    if (usuariosQueTuvieronHO < usuariosQueDebianTener) {
+        console.warn(`     -> ¡FALTARON ASIGNACIONES!`);
+        usuariosElegibles.forEach(u => {
+            if (!asignadosMap.has(u._id.toString())) {
+                console.warn(`     -> Faltó: ${u.nombre}`);
+            }
+        });
+    }
+    console.log(`     -------------------------------------------------`);
+};
 
 interface UsuarioConJusticiaHO extends UsuarioType {
     ultimaHomeOfficeParaSort: Date | null;
@@ -79,6 +101,9 @@ export const algoritmoGenerarHomeOffice = async (
         
         if (diaDeLaSemana === 1) { 
             asignadosEstaSemana.clear(); // Limpiar conteo semanal
+            if (dia > 1) {
+                logResumenSemanal(`RESUMEN SEMANA ANTERIOR (Días ${dia-7} a ${dia-3})`, asignadosEstaSemana, usuarios);
+            }
         }
 
         // Saltar dias festivos
@@ -162,6 +187,11 @@ export const algoritmoGenerarHomeOffice = async (
             await Usuario.updateOne({ _id: usuario._id }, { ultimaHomeOffice: fechaActual });
         }
     }
+     logResumenSemanal(
+        `RESUMEN FINAL (ÚLTIMA SEMANA DE ${mes}/${anio})`, 
+        asignadosEstaSemana, 
+        usuarios
+    );
 
 };
 
