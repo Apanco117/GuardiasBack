@@ -123,6 +123,11 @@ export const algoritmoGenerarHomeOffice = async (
             conteoSistemas[idSistemaStr] = (conteoSistemas[idSistemaStr] || 0) + 1;
         }
     });
+
+    for (const [idSistema, count] of Object.entries(conteoSistemas)) {
+        console.log(`Sistema ${idSistema}: ${count} usuarios`);
+    }
+
     let diaActual = 1;
     while(diaActual <= diasDelMes) {
         //console.log(`--- Procesando Semana a partir del Día ${diaActual} ---`);
@@ -151,10 +156,6 @@ export const algoritmoGenerarHomeOffice = async (
             const esFestivo = festivosSet.has(fecha.toISOString());
             return esHabil && !esFestivo;
         });
-
-        //for (const dia of diasHabilesSemana) {
-        //    console.log(`     Procesando día hábil: ${dia.toISOString().split('T')[0]} (${diasSemana[dia.getUTCDay()]})`);
-        //}
         
         // Si esta semana no tiene días hábiles (ej. Sáb 1 y Dom 2 de Nov)
         if (diasHabilesSemana.length === 0) {
@@ -163,7 +164,7 @@ export const algoritmoGenerarHomeOffice = async (
             continue;
         }
 
-         const cupoSemanal = Math.ceil( // Usuarios para la semana
+        const cupoSemanal = Math.ceil( // Usuarios para la semana
             (usuariosConJusticia.length * (diasHabilesSemana.length / 5)) * DIAS_HO_POR_SEMANA
         );
 
@@ -181,13 +182,16 @@ export const algoritmoGenerarHomeOffice = async (
             dayCounts.set(dia.toISOString(), 0)
         });
 
+        const asignacionesPorDia = new Map<string, UsuarioConJusticiaHO[]>();
+        diasHabilesSemana.forEach(dia => asignacionesPorDia.set(dia.toISOString(), []));
+
         // Evaluar cada candidato
         for (const usuario of candidatosEstaSemana) {
             let mejorDia: Date | null = null;
             let puntajeMasAlto = -Infinity;
 
             // Iterar dias de la semana
-            for (const dia of diasHabilesSemana) {
+            for (const dia of diasHabilesSemana) { 
                 const fechaISO = dia.toISOString();
                 let puntajeActual = 100;
 
@@ -197,6 +201,7 @@ export const algoritmoGenerarHomeOffice = async (
                     console.log(`       -> ${usuario.nombre} RECHAZADO (Ausencia) el ${fechaISO.split('T')[0]}`);
                     continue; // No puede este día, probar el siguiente día
                 }
+
                 // Verificar guardias asignadas
                 const guardia = guardiasPorDia.get(fechaISO);
                 if (guardia && (guardia.idUsuarioPrincipal.equals(usuario._id) || guardia.idUsuarioApoyo.equals(usuario._id))) {
@@ -207,6 +212,8 @@ export const algoritmoGenerarHomeOffice = async (
                 if (usuario.idSistema) {
                     const idSistemaStr = usuario.idSistema.toString();
                     // Verificar cuota por sistema
+
+                    //console.log(`${idSistemaStr}  ->  ${(conteoSistemas[idSistemaStr] || 0)}`)
                     if ((conteoSistemas[idSistemaStr] || 0) <= 2 && guardia) {
 
                         const principalEnGuardia = usuariosConJusticia.find(u => u._id.equals(guardia.idUsuarioPrincipal));
@@ -217,19 +224,30 @@ export const algoritmoGenerarHomeOffice = async (
                             (apoyoEnGuardia?.idSistema && apoyoEnGuardia.idSistema.equals(usuario.idSistema));
                     
                         if (compañeroEnGuardia) {
-                            puntajeActual = -Infinity;
+                            puntajeActual = -Infinity; // No se puede ir a HO si su compañero de sistema tiene guardia
                             //console.log(`       -> ${usuario.nombre} RECHAZADO (Conflicto Cobertura) el ${fechaISO.split('T')[0]}`);
+                            continue; // No puede este día
+                        }
+                        const asignadosHoy = asignacionesPorDia.get(fechaISO) || [];
+                        console.log(`Asignados hoy (${fechaISO.split('T')[0]}): ${asignadosHoy.map(u => u.nombre).join(', ')}`);
+                        const compañeroEnHO = asignadosHoy.some(
+                            (uAsignado) => uAsignado.idSistema && uAsignado.idSistema.equals(usuario.idSistema)
+                        );
+
+                        if (compañeroEnHO) {
+                            puntajeActual = -Infinity; // No se puede ir a HO si su compañero de sistema ya tiene HO
+                            console.log(`       -> ${usuario.nombre} RECHAZADO (Conflicto Cobertura HO) el ${fechaISO.split('T')[0]}`);
                             continue; // No puede este día
                         }
                     }
                 }
 
-                const asignadosEsteDia = dayCounts.get(fechaISO) || 0;
+                const asignadosEsteDia = (asignacionesPorDia.get(fechaISO) || []).length;
                 puntajeActual -= asignadosEsteDia * 10;
 
-                // Penalizar por repetir día de la semana
+                // Penalizar por repetir día de la semana ( evitar que repida dia de HO )
                 if (usuario.ultimaHomeOfficeParaSort && usuario.ultimaHomeOfficeParaSort.getUTCDay() === dia.getUTCDay()) {
-                    puntajeActual -= 50; // Penalización fuerte por repetir (ej. todos los lunes)
+                    puntajeActual -= 50; 
                 }
 
                 // desicion
@@ -250,12 +268,17 @@ export const algoritmoGenerarHomeOffice = async (
                 // Actualizar trackers en memoria para el siguiente usuario/semana
                 usuario.ultimaHomeOfficeParaSort = mejorDia;
                 usuario.asignadosEsteMes++;
-                dayCounts.set(fechaISO, (dayCounts.get(fechaISO) || 0) + 1);
+                asignacionesPorDia.get(fechaISO)!.push(usuario); 
                 asignadosSemanaCount++;
             } else {
                 console.log(`     -> ADVERTENCIA: No se encontró día válido para ${usuario.nombre} esta semana.`);
             }
         }
+        console.log(`     RESUMEN SEMANA (Días ${diaActual} a ${diaSemanaActual - 1}):`);
+        asignacionesPorDia.forEach((usuariosAsignados, fechaISO) => {
+            const nombres = usuariosAsignados.map(u => u.nombre).join(', ') || 'Nadie';
+            console.log(`       -> ${fechaISO.split('T')[0]}: ${usuariosAsignados.length} asignados (${nombres})`);
+        });
 
         diaActual = diaSemanaActual;
     }
